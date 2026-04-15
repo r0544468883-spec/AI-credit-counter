@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GoldenProgressBar } from "@/components/GoldenProgressBar";
 import { ManualUsageDialog } from "@/components/ManualUsageDialog";
+import { UsageTrendChart } from "@/components/UsageTrendChart";
 import { CheckCircle, Clock, AlertTriangle, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -137,6 +138,15 @@ const PlatformsSummary = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Usage history chart - all platforms */}
+        {(usage ?? []).length > 0 && platforms && (
+          <UsageTrendChart
+            logs={usage!}
+            platforms={platforms.map((p) => ({ id: p.id, name: p.name, color: p.color }))}
+            title="היסטוריית שימוש — כל הפלטפורמות"
+          />
+        )}
 
         {/* Per-platform breakdown */}
         <div className="space-y-4">
