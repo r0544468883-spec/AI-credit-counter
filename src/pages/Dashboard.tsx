@@ -28,7 +28,7 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("usage_logs")
-        .select("platform_id, units_used")
+        .select("platform_id, units_used, created_at")
         .eq("user_id", user!.id);
       return data ?? [];
     },
