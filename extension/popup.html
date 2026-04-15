@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html dir="rtl">
 <head>
   <meta charset="utf-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { width: 360px; min-height: 420px; background: #0b1120; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
+    body { width: 380px; min-height: 440px; background: #0b1120; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
     .header { padding: 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
     .header h1 { font-size: 16px; font-weight: 700; background: linear-gradient(135deg, #facc15, #eab308); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .header small { display: block; font-size: 9px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; }
     .content { padding: 12px; }
     .platform { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #131b2e; border: 1px solid #1e293b; }
-    .platform-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
-    .platform-info { flex: 1; }
+    .platform-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .platform-info { flex: 1; min-width: 0; }
     .platform-name { font-size: 13px; font-weight: 600; }
     .platform-meta { font-size: 10px; color: #64748b; }
-    .platform-remaining { text-align: right; font-size: 16px; font-weight: 700; }
+    .platform-remaining { text-align: left; font-size: 16px; font-weight: 700; flex-shrink: 0; }
     .platform-remaining small { display: block; font-size: 9px; color: #64748b; }
     .progress-bar { width: 100%; height: 4px; background: #1e293b; border-radius: 4px; margin-top: 6px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
@@ -28,7 +28,7 @@
     .footer a { color: #facc15; text-decoration: none; font-size: 12px; font-weight: 600; }
     .footer a:hover { text-decoration: underline; }
     .login-section { padding: 20px; text-align: center; }
-    .login-section input { width: 100%; padding: 8px 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #1e293b; background: #131b2e; color: #e2e8f0; font-size: 13px; }
+    .login-section input { width: 100%; padding: 8px 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #1e293b; background: #131b2e; color: #e2e8f0; font-size: 13px; direction: ltr; }
     .login-section button { width: 100%; padding: 10px; margin-top: 8px; border: none; border-radius: 8px; background: #facc15; color: #0b1120; font-weight: 700; cursor: pointer; font-size: 13px; }
     .login-section button:hover { background: #eab308; }
     .status { font-size: 11px; color: #22c55e; margin-top: 8px; }
@@ -36,6 +36,13 @@
     .sync-btn { background: none; border: 1px solid #1e293b; color: #64748b; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-top: 8px; }
     .sync-btn:hover { border-color: #facc15; color: #facc15; }
     #loading { text-align: center; padding: 40px; color: #64748b; }
+    .pie-container { display: flex; justify-content: center; margin: 12px 0; position: relative; }
+    .pie-container canvas { width: 140px; height: 140px; }
+    .pie-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .pie-center .total { font-size: 20px; font-weight: 700; color: #e2e8f0; }
+    .pie-center .label { font-size: 9px; color: #64748b; }
+    .offline-badge { display: inline-block; font-size: 9px; background: #f59e0b20; color: #f59e0b; padding: 2px 6px; border-radius: 4px; margin-right: 6px; }
+    .shortcut-hint { font-size: 9px; color: #475569; text-align: center; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -46,10 +53,11 @@
     </div>
   </div>
   <div class="content" id="app">
-    <div id="loading">Loading...</div>
+    <div id="loading">טוען...</div>
   </div>
   <div class="footer">
-    <a href="#" id="open-dashboard">Open Dashboard →</a>
+    <a href="#" id="open-dashboard">פתח דשבורד →</a>
+    <div class="shortcut-hint">Ctrl+Shift+A לפתיחה מהירה • Ctrl+Shift+L לרישום</div>
   </div>
   <script src="popup.js"></script>
 </body>
