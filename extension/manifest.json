@@ -3,7 +3,7 @@
   "name": "AI-Flow Monitor",
   "version": "1.3.0",
   "description": "Track your AI credits across ChatGPT, Claude, Gemini, DALL-E, Midjourney, Runway, Perplexity and more",
-  "permissions": ["activeTab", "storage", "tabs"],
+  "permissions": ["activeTab", "storage", "tabs", "notifications"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icon.png"
