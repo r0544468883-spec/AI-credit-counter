@@ -5,17 +5,46 @@ const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/extension-sync`;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // --- Chat message counting (fallback) ---
   if (message.type === "USAGE_DETECTED") {
-    chrome.storage.local.get(["platforms"], (result) => {
+    chrome.storage.local.get(["platforms", "notified_thresholds"], (result) => {
       const platforms = result.platforms || [];
+      const notified = result.notified_thresholds || {};
       const idx = platforms.findIndex((p) => p.name === message.platform);
       if (idx >= 0) {
         platforms[idx].used += message.units || 1;
         chrome.storage.local.set({ platforms });
 
         const pct = (platforms[idx].used / platforms[idx].quota) * 100;
+        const key = platforms[idx].name;
+
         if (pct >= 80) {
           chrome.action.setBadgeText({ text: "!" });
           chrome.action.setBadgeBackgroundColor({ color: "#facc15" });
+        }
+
+        // Push notification at 80%
+        if (pct >= 80 && pct < 100 && !notified[key + "_80"]) {
+          notified[key + "_80"] = true;
+          chrome.storage.local.set({ notified_thresholds: notified });
+          chrome.notifications.create(key + "_80", {
+            type: "basic",
+            iconUrl: "icon.png",
+            title: "⚠️ AI-Flow Monitor",
+            message: `${key}: הגעת ל-${Math.round(pct)}% מהמכסה (${platforms[idx].used}/${platforms[idx].quota})`,
+          });
+        }
+
+        // Push notification at 100%
+        if (pct >= 100 && !notified[key + "_100"]) {
+          notified[key + "_100"] = true;
+          chrome.storage.local.set({ notified_thresholds: notified });
+          chrome.notifications.create(key + "_100", {
+            type: "basic",
+            iconUrl: "icon.png",
+            title: "🚨 AI-Flow Monitor",
+            message: `${key}: המכסה נגמרה! (${platforms[idx].used}/${platforms[idx].quota})`,
+          });
+          chrome.action.setBadgeText({ text: "⛔" });
+          chrome.action.setBadgeBackgroundColor({ color: "#ef4444" });
         }
       }
     });
