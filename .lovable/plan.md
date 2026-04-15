@@ -1,73 +1,131 @@
 
 
-# תוכנית: ספירה אוטומטית מדפי ההגדרות של הפלטפורמות
+# תוכנית: שדרוג מלא — RTL + עברית, רספונסיב, ייצוא CSV, מרכז התראות, מכסות מותאמות, webhooks פעילים
 
-## הרעיון
-במקום לספור הודעות בעצמנו (וליפול על כפילויות, סגירת טאב וכו'), **נגרד את נתוני השימוש האמיתיים ישירות מדפי ההגדרות** של כל פלטפורמה. הנתונים כבר שם — רק צריך לקרוא אותם.
+## סקירה
+6 שדרוגים מרכזיים שהופכים את AI-Flow Monitor למערכת מלאה ובשלה.
 
-## מאיפה הנתונים באים
+---
 
-| פלטפורמה | דף | מה ניתן לחלץ |
-|-----------|-----|---------------|
-| ChatGPT | Settings → Usage / הכפתור בממשק שמציג כמה הודעות נשארו | כמות הודעות שנותרו, מודל, reset time |
-| Claude | Settings → Usage | כמות הודעות שנוצלו, מגבלת זמן |
-| Gemini | Settings / ממשק ראשי | מודל נוכחי, סטטוס מנוי |
-| OpenAI API | platform.openai.com/usage | קרדיטים שנותרו, שימוש בדולרים |
+## 1. תרגום מלא לעברית + RTL
 
-## איך זה עובד
+**קבצים:** `index.html`, `src/index.css`, כל קובצי הדפים והקומפוננטות
 
-### 1. Content Scripts חדשים לדפי Settings
-כל content script יקבל **שני תפקידים**:
-- **מעקב צ'אט** (כמו היום) — ספירת הודעות כ-fallback
-- **גריפת מכסה** — כשהמשתמש נכנס לדף ההגדרות, או בבדיקה תקופתית, חילוץ הנתונים האמיתיים
+- הוספת `dir="rtl"` ו-`lang="he"` ל-`<html>` ב-`index.html`
+- עדכון CSS: `ml-64` → `ms-64` (margin-inline-start) ב-`DashboardLayout`
+- Sidebar: `left-0` → `right-0` (או שימוש ב-`inset-inline-start`)
+- תרגום כל הטקסטים הקבועים (sidebar labels, כותרות, כפתורים, הודעות toast, placeholders):
+  - Dashboard → לוח בקרה
+  - Platforms → פלטפורמות  
+  - Settings → הגדרות
+  - Activity → פעילות
+  - Tips → טיפים
+  - Logout → התנתקות
+  - "remaining" → "נותרו"
+  - "Active Platforms" → "פלטפורמות פעילות"
+  - Auth page: "Welcome Back" → "ברוכים השבים", "Sign In" → "כניסה", "Sign Up" → "הרשמה"
+  - וכו׳
 
-### 2. שינויים בקבצים
+## 2. רספונסיב + Hamburger Menu
 
-| קובץ | שינוי |
-|-------|-------|
-| `extension/content-chatgpt.js` | הוספת גריפת usage מדף Settings + זיהוי הודעת "limit reached" |
-| `extension/content-claude.js` | גריפת usage bar מהממשק |
-| `extension/content-gemini.js` | גריפת סטטוס מנוי ומודל |
-| `extension/manifest.json` | הוספת `matches` לדפי settings (למשל `https://chatgpt.com/settings/*`, `https://platform.openai.com/*`) |
-| `extension/background.js` | הוספת `QUOTA_SCRAPED` message type — שמירת נתוני מכסה אמיתיים |
-| `extension/popup.html` / `popup.js` | הצגת "נתון אמיתי" vs "הערכה" עם אינדיקטור |
-| `supabase/functions/extension-sync/index.ts` | endpoint חדש `action=update-quota` לעדכון מכסה אמיתית |
-| DB migration | הוספת עמודות `actual_remaining`, `last_scraped_at`, `model_name` ל-`usage_logs` או טבלה חדשה `platform_usage_snapshots` |
-| `src/pages/PlatformDetail.tsx` | הצגת נתון אמיתי כשזמין, הערכה כש-fallback |
+**קבצים:** `AppSidebar.tsx`, `DashboardLayout.tsx`, דפים עם grid
 
-### 3. טבלת DB חדשה: `platform_usage_snapshots`
-```
-id, user_id, platform_id, model_name, 
-actual_remaining, actual_limit, reset_at,
-source ('scraped' | 'manual' | 'estimated'),
-scraped_at
-```
-זה מאפשר לשמור היסטוריה של נתונים אמיתיים לאורך זמן.
+- הוספת state `mobileOpen` ב-`DashboardLayout` + כפתור hamburger שנראה רק ב-`md:hidden`
+- Sidebar: `hidden md:flex` כברירת מחדל, overlay מלא במובייל כשפתוח
+- Grid של כרטיסים: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3` (כבר קיים ברוב המקומות)
+- `max-w-*` הקיימים יהפכו ל-`w-full` במובייל
 
-### 4. לוגיקה בתוסף
-```
-כל 15 דקות (או כשנכנסים לדף settings):
-  → גרד נתוני שימוש מה-DOM
-  → שלח QUOTA_SCRAPED ל-background
-  → background שומר ב-storage + שולח ל-Cloud
+## 3. ייצוא CSV
 
-בתוסף popup:
-  אם יש נתון scraped טרי (< 30 דק) → הצג אותו עם ✓
-  אחרת → הצג הערכה מספירת הודעות עם ~
-```
+**קבצים:** `PlatformsSummary.tsx`, `ActivityFeed.tsx` + utility חדש `src/lib/export-csv.ts`
 
-### 5. רישום ידני כ-fallback
-כפתור "עדכן ידנית" בתוסף ובדשבורד — למקרים שבהם הגריפה לא עובדת או לפלטפורמות לא נתמכות (Cursor, מובייל).
+- פונקציית עזר `downloadCSV(rows, filename)` שממירה מערך אובייקטים ל-CSV ומורידה
+- כפתור "ייצוא CSV" בדף Summary — מייצא פלטפורמה, שימוש, מכסה, אחוז, מקור
+- כפתור "ייצוא CSV" בדף Activity — מייצא תאריך, פלטפורמה, יחידות, תיאור, מודל
+
+## 4. מרכז התראות (Bell Icon)
+
+**DB:** טבלת `quota_alerts` חדשה (`id, user_id, platform_id, threshold_pct, message, read, created_at`) + RLS
+**קבצים:** `src/components/NotificationCenter.tsx`, `DashboardLayout.tsx`, `extension-sync/index.ts`
+
+- קומפוננטת Bell icon ב-header עם badge של מספר התראות שלא נקראו
+- Popover/dropdown שמציג רשימת התראות עם timestamp
+- Edge function: כשמגיע `action=log` או `action=update-quota`, בדיקה אם usage ≥ 80% → insert ל-`quota_alerts`
+- כפתור "סמן הכל כנקרא"
+
+## 5. מכסות מותאמות + איפוס אוטומטי
+
+**קבצים:** `PlatformDetail.tsx` (UI לעריכת מכסה), `extension-sync/index.ts`
+
+- כפתור "ערוך מכסה" בדף פלטפורמה → dialog עם input לערך חדש → upsert ל-`user_platform_quotas`
+- לוגיקה באז׳ function: אם `reset_cycle = 'monthly'` ו-`scraped_at` של snapshot אחרון מחודש קודם → איפוס ספירה (הוספת usage_log עם units שלילי, או פשוט הצגה לפי תקופה נוכחית בלבד)
+- **גישה פשוטה**: סינון `usage_logs` לפי תחילת תקופה נוכחית (1 לחודש / תחילת שבוע) במקום מחיקה
+
+## 6. Webhooks פעילים
+
+**קבצים:** `extension-sync/index.ts`
+
+- בתוך ה-edge function, אחרי log usage — שליפת `webhook_configs` של המשתמש
+- חישוב אחוז שימוש נוכחי
+- אם עובר את `trigger_threshold` → `fetch(webhook.url, { method: 'POST', body: JSON.stringify({ platform, used, quota, pct }) })`
+- שמירת timestamp של שליחה אחרונה כדי לא לשלוח שוב אותו threshold
+
+---
 
 ## סדר יישום
-1. **טבלת `platform_usage_snapshots`** + migration + RLS
-2. **Content scripts** — גריפת נתונים מדפי settings
-3. **Background + Edge Function** — שמירת snapshots
-4. **Popup + Dashboard** — הצגת נתון אמיתי vs הערכה
-5. **רישום ידני** — fallback UI
 
-## מגבלות
-- הסלקטורים יכולים להישבר כשפלטפורמות משנות UI — צריך תחזוקה
-- חלק מהנתונים לא חשופים בממשק (למשל ChatGPT לא תמיד מציג מספר מדויק)
-- עובד רק כשהדפדפן פתוח עם התוסף מותקן
+1. Migration: טבלת `quota_alerts` + RLS
+2. RTL + תרגום עברית (כל הקבצים)
+3. רספונסיב + hamburger
+4. ייצוא CSV
+5. מרכז התראות (UI + edge function)
+6. מכסות מותאמות + סינון לפי תקופה
+7. Webhooks פעילים
+8. Deploy edge function מעודכן + ZIP תוסף
+
+---
+
+## פירוט טכני
+
+### טבלת quota_alerts
+```sql
+CREATE TABLE public.quota_alerts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  platform_id uuid NOT NULL,
+  threshold_pct integer NOT NULL,
+  message text NOT NULL,
+  read boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.quota_alerts ENABLE ROW LEVEL SECURITY;
+-- SELECT/INSERT/UPDATE for own rows
+```
+
+### סינון לפי תקופה (במקום איפוס)
+במקום למחוק usage_logs, פשוט מסננים לפי `created_at >= period_start`:
+- monthly: `created_at >= date_trunc('month', now())`
+- weekly: `created_at >= date_trunc('week', now())`
+
+זה ישפיע על Dashboard, Platforms, Summary — בכל מקום שמחשבים `totalUsed`.
+
+### Webhook fire logic (edge function)
+```typescript
+// After inserting usage log:
+const { data: webhooks } = await supabase
+  .from('webhook_configs')
+  .select('*')
+  .eq('user_id', user.id)
+  .eq('is_active', true);
+
+for (const wh of webhooks || []) {
+  if (currentPct >= wh.trigger_threshold) {
+    await fetch(wh.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform_name, used, quota, percentage: currentPct })
+    });
+  }
+}
+```
 
