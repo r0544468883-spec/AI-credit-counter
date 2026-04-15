@@ -71,6 +71,44 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_plans: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          plan_name: string
+          platform_id: string
+          price_label: string | null
+          quota_limit: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          plan_name: string
+          platform_id: string
+          price_label?: string | null
+          quota_limit: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          plan_name?: string
+          platform_id?: string
+          price_label?: string | null
+          quota_limit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_plans_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -145,6 +183,7 @@ export type Database = {
           custom_quota_limit: number
           id: string
           platform_id: string
+          selected_plan_id: string | null
           updated_at: string
           user_id: string
         }
@@ -153,6 +192,7 @@ export type Database = {
           custom_quota_limit: number
           id?: string
           platform_id: string
+          selected_plan_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -161,6 +201,7 @@ export type Database = {
           custom_quota_limit?: number
           id?: string
           platform_id?: string
+          selected_plan_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -170,6 +211,13 @@ export type Database = {
             columns: ["platform_id"]
             isOneToOne: false
             referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_platform_quotas_selected_plan_id_fkey"
+            columns: ["selected_plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plans"
             referencedColumns: ["id"]
           },
         ]
