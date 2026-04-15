@@ -53,6 +53,66 @@
 
     --golden-glow: 48 97% 54%;
     --golden-shimmer: 45 93% 47%;
+
+    --chart-grid: 222 30% 18%;
+    --chart-text: 215 20% 55%;
+    --chart-tooltip-bg: 222 47% 9%;
+    --chart-tooltip-border: 222 30% 18%;
+    --chart-tooltip-text: 210 40% 96%;
+  }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 48 97% 44%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 50% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 14% 92%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 48 97% 44%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 30%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 48 97% 44%;
+
+    --sidebar-background: 220 14% 96%;
+    --sidebar-foreground: 220 9% 35%;
+    --sidebar-primary: 48 97% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 90%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 220 13% 87%;
+    --sidebar-ring: 48 97% 44%;
+
+    --golden-glow: 48 97% 44%;
+    --golden-shimmer: 45 93% 38%;
+
+    --chart-grid: 220 13% 87%;
+    --chart-text: 220 9% 46%;
+    --chart-tooltip-bg: 0 0% 100%;
+    --chart-tooltip-border: 220 13% 87%;
+    --chart-tooltip-text: 222 47% 11%;
   }
 
   * {
@@ -68,11 +128,11 @@
 @layer utilities {
   .golden-text {
     @apply text-transparent bg-clip-text;
-    background-image: linear-gradient(135deg, hsl(48 97% 54%), hsl(45 93% 68%), hsl(48 97% 54%));
+    background-image: linear-gradient(135deg, hsl(var(--golden-glow)), hsl(var(--golden-shimmer)), hsl(var(--golden-glow)));
   }
 
   .golden-border {
-    border-color: hsl(48 97% 54% / 0.3);
+    border-color: hsl(var(--golden-glow) / 0.3);
   }
 
   .glass-card {
@@ -86,8 +146,8 @@
 }
 
 @keyframes pulse-gold {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(48 97% 54% / 0.4); }
-  50% { box-shadow: 0 0 20px 4px hsl(48 97% 54% / 0.2); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--golden-glow) / 0.4); }
+  50% { box-shadow: 0 0 20px 4px hsl(var(--golden-glow) / 0.2); }
 }
 
 @keyframes fade-in-up {

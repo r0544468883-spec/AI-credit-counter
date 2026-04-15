@@ -106,23 +106,23 @@ export const UsageTrendChart = ({
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 30% 18%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--chart-grid))" />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }}
-                axisLine={{ stroke: "hsl(222 30% 18%)" }}
+                tick={{ fill: "hsl(var(--chart-text))", fontSize: 11 }}
+                axisLine={{ stroke: "hsl(var(--chart-grid))" }}
               />
               <YAxis
-                tick={{ fill: "hsl(215 20% 55%)", fontSize: 11 }}
-                axisLine={{ stroke: "hsl(222 30% 18%)" }}
+                tick={{ fill: "hsl(var(--chart-text))", fontSize: 11 }}
+                axisLine={{ stroke: "hsl(var(--chart-grid))" }}
                 allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(222 47% 9%)",
-                  border: "1px solid hsl(222 30% 18%)",
+                  backgroundColor: "hsl(var(--chart-tooltip-bg))",
+                  border: "1px solid hsl(var(--chart-tooltip-border))",
                   borderRadius: "8px",
-                  color: "hsl(210 40% 96%)",
+                  color: "hsl(var(--chart-tooltip-text))",
                   fontSize: 12,
                 }}
               />

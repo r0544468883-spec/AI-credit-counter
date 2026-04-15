@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Cpu, Lightbulb, Settings, LogOut, Activity, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Cpu, Lightbulb, Settings, LogOut, Activity, BarChart3, PieChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "לוח בקרה" },
   { to: "/platforms", icon: Cpu, label: "פלטפורמות" },
   { to: "/summary", icon: BarChart3, label: "סיכום" },
+  { to: "/analytics", icon: PieChart, label: "אנליטיקס" },
   { to: "/activity", icon: Activity, label: "פעילות" },
   { to: "/tips", icon: Lightbulb, label: "טיפים" },
   { to: "/settings", icon: Settings, label: "הגדרות" },
