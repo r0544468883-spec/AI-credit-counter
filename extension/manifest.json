@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI-Flow Monitor",
-  "version": "1.2.0",
-  "description": "Track your AI credits across ChatGPT, Claude, Gemini, Midjourney, Runway and more",
+  "version": "1.3.0",
+  "description": "Track your AI credits across ChatGPT, Claude, Gemini, DALL-E, Midjourney, Runway, Perplexity and more",
   "permissions": ["activeTab", "storage", "tabs"],
   "action": {
     "default_popup": "popup.html",
@@ -42,6 +42,14 @@
         "https://runwayml.com/*"
       ],
       "js": ["content-runway.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*"
+      ],
+      "js": ["content-perplexity.js"],
       "run_at": "document_idle"
     }
   ],
