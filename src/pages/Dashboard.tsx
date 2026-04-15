@@ -91,13 +91,11 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8 max-w-6xl">
-        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold golden-text">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Your AI usage at a glance</p>
+          <h1 className="text-3xl font-bold golden-text">לוח בקרה</h1>
+          <p className="text-muted-foreground mt-1">סקירת השימוש שלך ב-AI במבט אחד</p>
         </div>
 
-        {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="glass-card">
             <CardContent className="p-5 flex items-center gap-4">
@@ -106,7 +104,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{platforms?.length ?? 0}</p>
-                <p className="text-xs text-muted-foreground">Active Platforms</p>
+                <p className="text-xs text-muted-foreground">פלטפורמות פעילות</p>
               </div>
             </CardContent>
           </Card>
@@ -117,7 +115,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">{totalQuota - totalUsed}</p>
-                <p className="text-xs text-muted-foreground">Total Remaining</p>
+                <p className="text-xs text-muted-foreground">סה״כ נותרו</p>
               </div>
             </CardContent>
           </Card>
@@ -125,24 +123,21 @@ const Dashboard = () => {
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Overall Usage</span>
+                <span className="text-xs text-muted-foreground">שימוש כולל</span>
               </div>
               <GoldenProgressBar value={totalUsed} max={totalQuota} size="md" />
             </CardContent>
           </Card>
         </div>
 
-        {/* Usage Trend Chart */}
         {usageLogs && platforms && usageLogs.length > 0 && (
           <UsageTrendChart logs={usageLogs} platforms={platforms} />
         )}
 
-        {/* Tip of the Day */}
         {tip && <DailyTipCard content={tip.content} category={tip.category ?? undefined} />}
 
-        {/* Platform Grid */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Your Platforms</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">הפלטפורמות שלך</h2>
           {loadingPlatforms ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -167,10 +162,9 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Recent Activity */}
         {recentActivity && recentActivity.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">פעילות אחרונה</h2>
             <Card className="glass-card">
               <CardContent className="p-0">
                 {recentActivity.map((log, i) => (
@@ -187,13 +181,13 @@ const Dashboard = () => {
                         <p className="text-sm font-medium text-foreground">
                           {(log as any).ai_platforms?.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">{log.action_description ?? "API call"}</p>
+                        <p className="text-xs text-muted-foreground">{log.action_description ?? "קריאת API"}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-start">
                       <span className="text-sm font-semibold text-foreground">{log.units_used}</span>
                       <p className="text-[10px] text-muted-foreground">
-                        {new Date(log.created_at).toLocaleDateString()}
+                        {new Date(log.created_at).toLocaleDateString("he-IL")}
                       </p>
                     </div>
                   </div>

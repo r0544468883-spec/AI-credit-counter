@@ -17,8 +17,8 @@ const Tips = () => {
     <DashboardLayout>
       <div className="space-y-6 max-w-3xl">
         <div>
-          <h1 className="text-3xl font-bold golden-text">Daily Tips</h1>
-          <p className="text-muted-foreground mt-1">AI productivity insights for power users</p>
+          <h1 className="text-3xl font-bold golden-text">טיפים יומיים</h1>
+          <p className="text-muted-foreground mt-1">תובנות פרודוקטיביות למשתמשי AI מתקדמים</p>
         </div>
         {isLoading ? (
           <div className="space-y-4">{Array.from({ length: 4 }).map((_, i) => <ShimmerSkeleton key={i} className="h-24" />)}</div>

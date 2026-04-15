@@ -5,6 +5,94 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+async function checkThresholdsAndAlert(
+  supabase: any,
+  userId: string,
+  platformId: string,
+  platformName: string,
+) {
+  // Get current usage for this platform
+  const { data: usageLogs } = await supabase
+    .from('usage_logs')
+    .select('units_used')
+    .eq('user_id', userId)
+    .eq('platform_id', platformId)
+
+  const totalUsed = (usageLogs || []).reduce((s: number, l: any) => s + l.units_used, 0)
+
+  // Get quota
+  const { data: quotaRow } = await supabase
+    .from('user_platform_quotas')
+    .select('custom_quota_limit')
+    .eq('user_id', userId)
+    .eq('platform_id', platformId)
+    .maybeSingle()
+
+  const { data: platform } = await supabase
+    .from('ai_platforms')
+    .select('default_quota_limit')
+    .eq('id', platformId)
+    .single()
+
+  const quota = quotaRow?.custom_quota_limit || platform?.default_quota_limit || 0
+  if (quota <= 0) return
+
+  const pct = Math.round((totalUsed / quota) * 100)
+
+  // Check if alerts already exist for these thresholds
+  const thresholds = [80, 100].filter((t) => pct >= t)
+
+  for (const threshold of thresholds) {
+    const { data: existing } = await supabase
+      .from('quota_alerts')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('platform_id', platformId)
+      .eq('threshold_pct', threshold)
+      .limit(1)
+      .maybeSingle()
+
+    if (!existing) {
+      const message = threshold >= 100
+        ? `המכסה של ${platformName} נגמרה! (${pct}%)`
+        : `השימוש ב-${platformName} הגיע ל-${pct}% מהמכסה`
+
+      await supabase.from('quota_alerts').insert({
+        user_id: userId,
+        platform_id: platformId,
+        threshold_pct: threshold,
+        message,
+      })
+    }
+  }
+
+  // Fire webhooks
+  const { data: webhooks } = await supabase
+    .from('webhook_configs')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+
+  for (const wh of webhooks || []) {
+    if (pct >= wh.trigger_threshold) {
+      try {
+        await fetch(wh.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platform_name: platformName,
+            used: totalUsed,
+            quota,
+            percentage: pct,
+          }),
+        })
+      } catch (_) {
+        // Silently fail webhook
+      }
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -54,14 +142,12 @@ Deno.serve(async (req) => {
         .limit(1)
         .single()
 
-      // Get latest snapshot per platform
       const { data: snapshots } = await supabase
         .from('platform_usage_snapshots')
         .select('*')
         .eq('user_id', user.id)
         .order('scraped_at', { ascending: false })
 
-      // Aggregate usage per platform
       const usageMap: Record<string, number> = {}
       for (const log of usage || []) {
         usageMap[log.platform_id] = (usageMap[log.platform_id] || 0) + log.units_used
@@ -71,7 +157,6 @@ Deno.serve(async (req) => {
         quotaMap[q.platform_id] = q.custom_quota_limit
       }
 
-      // Build snapshot map (latest per platform)
       const snapshotMap: Record<string, any> = {}
       for (const s of snapshots || []) {
         if (!snapshotMap[s.platform_id]) {
@@ -117,7 +202,7 @@ Deno.serve(async (req) => {
 
       const { data: platform } = await supabase
         .from('ai_platforms')
-        .select('id')
+        .select('id, name')
         .ilike('name', platform_name)
         .single()
 
@@ -143,6 +228,9 @@ Deno.serve(async (req) => {
         })
       }
 
+      // Check thresholds and fire alerts/webhooks
+      await checkThresholdsAndAlert(supabase, user.id, platform.id, platform.name)
+
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -162,7 +250,7 @@ Deno.serve(async (req) => {
 
       const { data: platform } = await supabase
         .from('ai_platforms')
-        .select('id')
+        .select('id, name')
         .ilike('name', platform_name)
         .single()
 
@@ -173,7 +261,6 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Insert each snapshot
       const rows = (snapshotData as any[]).map((s: any) => ({
         user_id: user.id,
         platform_id: platform.id,
@@ -193,6 +280,9 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      // Check thresholds after quota update
+      await checkThresholdsAndAlert(supabase, user.id, platform.id, platform.name)
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -21,8 +21,6 @@ export const PlatformCard = ({
   category,
   onClick,
 }: PlatformCardProps) => {
-  const percentage = quota > 0 ? (used / quota) * 100 : 0;
-
   return (
     <Card
       onClick={onClick}
@@ -52,9 +50,9 @@ export const PlatformCard = ({
               </span>
             )}
           </div>
-          <div className="text-right">
+          <div className="text-start">
             <span className="text-lg font-bold text-foreground">{quota - used}</span>
-            <p className="text-[10px] text-muted-foreground">remaining</p>
+            <p className="text-[10px] text-muted-foreground">נותרו</p>
           </div>
         </div>
         <GoldenProgressBar value={used} max={quota} size="sm" />

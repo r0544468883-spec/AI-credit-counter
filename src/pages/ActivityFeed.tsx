@@ -3,7 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ShimmerSkeleton } from "@/components/ShimmerSkeleton";
+import { Download } from "lucide-react";
+import { downloadCSV } from "@/lib/export-csv";
 
 const ActivityFeed = () => {
   const { user } = useAuth();
@@ -22,12 +25,32 @@ const ActivityFeed = () => {
     enabled: !!user,
   });
 
+  const handleExport = () => {
+    if (!logs?.length) return;
+    downloadCSV(
+      logs.map((l) => ({
+        תאריך: new Date(l.created_at).toLocaleString("he-IL"),
+        פלטפורמה: (l as any).ai_platforms?.name ?? "",
+        יחידות: l.units_used,
+        תיאור: l.action_description ?? "",
+        מודל: l.model_name ?? "",
+      })),
+      "activity-export.csv"
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-3xl">
-        <div>
-          <h1 className="text-3xl font-bold golden-text">Activity Feed</h1>
-          <p className="text-muted-foreground mt-1">All actions across platforms</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold golden-text">פעילות</h1>
+            <p className="text-muted-foreground mt-1">כל הפעולות בכל הפלטפורמות</p>
+          </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExport} disabled={!logs?.length}>
+            <Download className="w-4 h-4" />
+            ייצוא CSV
+          </Button>
         </div>
         {isLoading ? (
           <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <ShimmerSkeleton key={i} className="h-16" />)}</div>
@@ -40,19 +63,19 @@ const ActivityFeed = () => {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: (log as any).ai_platforms?.color ?? "hsl(var(--primary))" }} />
                     <div>
                       <p className="text-sm font-medium text-foreground">{(log as any).ai_platforms?.name}</p>
-                      <p className="text-xs text-muted-foreground">{log.action_description ?? "API call"}</p>
+                      <p className="text-xs text-muted-foreground">{log.action_description ?? "קריאת API"}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-start">
                     <span className="text-sm font-semibold text-foreground">{log.units_used}</span>
-                    <p className="text-[10px] text-muted-foreground">{new Date(log.created_at).toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground">{new Date(log.created_at).toLocaleString("he-IL")}</p>
                   </div>
                 </div>
               ))}
             </CardContent>
           </Card>
         ) : (
-          <p className="text-center text-muted-foreground">No activity recorded yet</p>
+          <p className="text-center text-muted-foreground">אין פעילות עדיין</p>
         )}
       </div>
     </DashboardLayout>

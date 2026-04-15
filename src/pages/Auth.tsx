@@ -31,7 +31,7 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else if (!isLogin) {
-      toast.success("Check your email to confirm your account!");
+      toast.success("בדוק את המייל שלך כדי לאשר את החשבון!");
     }
   };
 
@@ -44,17 +44,17 @@ const Auth = () => {
             <img src={tosafLogo} alt="AI-Flow Monitor" className="w-16 h-16 object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl golden-text">{isLogin ? "Welcome Back" : "Create Account"}</CardTitle>
+            <CardTitle className="text-2xl golden-text">{isLogin ? "ברוכים השבים" : "יצירת חשבון"}</CardTitle>
             <CardDescription className="text-muted-foreground mt-1">
-              {isLogin ? "Sign in to your AI-Flow Monitor" : "Start tracking your AI usage"}
+              {isLogin ? "התחבר ל-AI-Flow Monitor" : "התחל לעקוב אחרי השימוש שלך ב-AI"}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="אימייל"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -62,7 +62,7 @@ const Auth = () => {
             />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -70,13 +70,13 @@ const Auth = () => {
               className="bg-muted/50 border-border/50 focus:border-primary"
             />
             <Button type="submit" disabled={submitting} className="w-full font-semibold">
-              {submitting ? "..." : isLogin ? "Sign In" : "Sign Up"}
+              {submitting ? "..." : isLogin ? "כניסה" : "הרשמה"}
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            {isLogin ? "אין לך חשבון?" : "כבר יש לך חשבון?"}{" "}
             <button onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline font-medium">
-              {isLogin ? "Sign Up" : "Sign In"}
+              {isLogin ? "הרשמה" : "כניסה"}
             </button>
           </p>
         </CardContent>

@@ -46,8 +46,8 @@ const Platforms = () => {
     <DashboardLayout>
       <div className="space-y-8 max-w-6xl">
         <div>
-          <h1 className="text-3xl font-bold golden-text">Platforms</h1>
-          <p className="text-muted-foreground mt-1">All your AI subscriptions in one place</p>
+          <h1 className="text-3xl font-bold golden-text">פלטפורמות</h1>
+          <p className="text-muted-foreground mt-1">כל המנויים שלך ב-AI במקום אחד</p>
         </div>
 
         {isLoading ? (
@@ -57,7 +57,7 @@ const Platforms = () => {
         ) : (
           <>
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">Tier 1 — Primary</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">שכבה 1 — ראשיות</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tier1.map((p) => (
                   <PlatformCard key={p.id} name={p.name} iconUrl={p.icon_url} used={getUsage(p.id)} quota={getQuota(p.id, p.default_quota_limit)} color={p.color} category={p.category} onClick={() => navigate(`/platforms/${p.id}`)} />
@@ -66,7 +66,7 @@ const Platforms = () => {
             </div>
             {tier2.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-foreground mb-4">Tier 2 — Extended</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">שכבה 2 — מורחבות</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {tier2.map((p) => (
                     <PlatformCard key={p.id} name={p.name} iconUrl={p.icon_url} used={getUsage(p.id)} quota={getQuota(p.id, p.default_quota_limit)} color={p.color} category={p.category} onClick={() => navigate(`/platforms/${p.id}`)} />

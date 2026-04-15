@@ -16,7 +16,7 @@ export const DailyTipCard = ({ content, category }: DailyTipCardProps) => (
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-semibold golden-text">Tip of the Day</h4>
+            <h4 className="text-sm font-semibold golden-text">הטיפ היומי</h4>
             {category && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
                 {category}

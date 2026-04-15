@@ -2,13 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { GoldenProgressBar } from "@/components/GoldenProgressBar";
 import { ManualUsageDialog } from "@/components/ManualUsageDialog";
 import { UsageTrendChart } from "@/components/UsageTrendChart";
-import { CheckCircle, Clock, AlertTriangle, TrendingUp } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, TrendingUp, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { downloadCSV } from "@/lib/export-csv";
 
 const PlatformsSummary = () => {
   const { user } = useAuth();
@@ -59,7 +61,6 @@ const PlatformsSummary = () => {
     enabled: !!user,
   });
 
-  // Build aggregated data
   const usageByPlatform: Record<string, { total: number; byModel: Record<string, number> }> = {};
   for (const log of usage ?? []) {
     if (!usageByPlatform[log.platform_id]) {
@@ -75,7 +76,6 @@ const PlatformsSummary = () => {
     quotaMap[q.platform_id] = q.custom_quota_limit;
   }
 
-  // Latest snapshot per platform
   const snapshotMap: Record<string, typeof snapshots extends (infer T)[] ? T : never> = {};
   for (const s of snapshots ?? []) {
     if (!snapshotMap[s.platform_id]) {
@@ -91,18 +91,42 @@ const PlatformsSummary = () => {
     return quota > 0 && (used / quota) >= 0.8;
   }).length;
 
+  const handleExport = () => {
+    if (!platforms?.length) return;
+    downloadCSV(
+      platforms.map((p) => {
+        const used = usageByPlatform[p.id]?.total || 0;
+        const quota = quotaMap[p.id] || p.default_quota_limit;
+        const snap = snapshotMap[p.id];
+        return {
+          פלטפורמה: p.name,
+          שימוש: used,
+          מכסה: quota,
+          אחוז: quota > 0 ? `${((used / quota) * 100).toFixed(0)}%` : "0%",
+          מקור: snap ? (snap.source === "scraped" ? "מאומת" : snap.source) : "הערכה",
+        };
+      }),
+      "platforms-summary.csv"
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-5xl">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">סיכום פלטפורמות</h1>
             <p className="text-sm text-muted-foreground">מבט כולל על השימוש בכל הפלטפורמות</p>
           </div>
-          <ManualUsageDialog />
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+              <Download className="w-4 h-4" />
+              ייצוא CSV
+            </Button>
+            <ManualUsageDialog />
+          </div>
         </div>
 
-        {/* Summary cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="glass-card">
             <CardContent className="p-4 flex items-center gap-3">
@@ -139,7 +163,6 @@ const PlatformsSummary = () => {
           </Card>
         </div>
 
-        {/* Usage history chart - all platforms */}
         {(usage ?? []).length > 0 && platforms && (
           <UsageTrendChart
             logs={usage!}
@@ -148,7 +171,6 @@ const PlatformsSummary = () => {
           />
         )}
 
-        {/* Per-platform breakdown */}
         <div className="space-y-4">
           {(platforms ?? []).map((platform) => {
             const pUsage = usageByPlatform[platform.id];
@@ -212,7 +234,6 @@ const PlatformsSummary = () => {
 
                   <GoldenProgressBar value={displayUsed} max={displayMax} size="sm" />
 
-                  {/* Model breakdown */}
                   {pUsage && Object.keys(pUsage.byModel).length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {Object.entries(pUsage.byModel)

@@ -189,6 +189,44 @@ export type Database = {
         }
         Relationships: []
       }
+      quota_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          platform_id: string
+          read: boolean
+          threshold_pct: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          platform_id: string
+          read?: boolean
+          threshold_pct: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          platform_id?: string
+          read?: boolean
+          threshold_pct?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quota_alerts_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_logs: {
         Row: {
           action_description: string | null

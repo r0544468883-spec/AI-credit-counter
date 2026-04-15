@@ -38,7 +38,7 @@ const SettingsPage = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Webhook added");
+      toast.success("Webhook נוסף");
       setWebhookUrl("");
       queryClient.invalidateQueries({ queryKey: ["webhooks"] });
     },
@@ -49,28 +49,28 @@ const SettingsPage = () => {
     <DashboardLayout>
       <div className="space-y-6 max-w-2xl">
         <div>
-          <h1 className="text-3xl font-bold golden-text">Settings</h1>
-          <p className="text-muted-foreground mt-1">Configure your AI-Flow Monitor</p>
+          <h1 className="text-3xl font-bold golden-text">הגדרות</h1>
+          <p className="text-muted-foreground mt-1">הגדר את AI-Flow Monitor שלך</p>
         </div>
 
         <Card className="glass-card">
-          <CardHeader><CardTitle className="text-lg">Profile</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">פרופיל</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <label className="text-xs text-muted-foreground">Email</label>
+              <label className="text-xs text-muted-foreground">אימייל</label>
               <p className="text-sm text-foreground">{profile?.email ?? user?.email}</p>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Display Name</label>
+              <label className="text-xs text-muted-foreground">שם תצוגה</label>
               <p className="text-sm text-foreground">{profile?.display_name ?? "—"}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="glass-card">
-          <CardHeader><CardTitle className="text-lg">Webhook Notifications</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">התראות Webhook</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">Get notified when your usage hits a threshold (Make.com / n8n compatible)</p>
+            <p className="text-sm text-muted-foreground">קבל התראה כשהשימוש שלך מגיע לסף (תואם Make.com / n8n)</p>
             <div className="flex gap-3">
               <Input
                 placeholder="https://hook.us1.make.com/..."
@@ -86,7 +86,7 @@ const SettingsPage = () => {
                 min={1}
                 max={100}
               />
-              <Button onClick={() => addWebhook.mutate()} disabled={!webhookUrl}>Add</Button>
+              <Button onClick={() => addWebhook.mutate()} disabled={!webhookUrl}>הוסף</Button>
             </div>
             {webhooks && webhooks.length > 0 && (
               <div className="space-y-2 mt-4">
@@ -103,8 +103,8 @@ const SettingsPage = () => {
 
         <Card className="glass-card border-primary/20">
           <CardContent className="p-5">
-            <h3 className="text-sm font-semibold golden-text mb-1">Chrome Extension</h3>
-            <p className="text-xs text-muted-foreground mb-3">Download the extension to track usage directly from AI platforms</p>
+            <h3 className="text-sm font-semibold golden-text mb-1">תוסף כרום</h3>
+            <p className="text-xs text-muted-foreground mb-3">הורד את התוסף כדי לעקוב אחרי שימוש ישירות מהפלטפורמות</p>
             <Button
               variant="outline"
               className="border-primary/30 text-primary hover:bg-primary/10"
@@ -115,10 +115,10 @@ const SettingsPage = () => {
                   a.download = "ai-flow-extension.zip";
                   a.click();
                   URL.revokeObjectURL(a.href);
-                }).catch(() => toast.error("Extension not yet available"));
+                }).catch(() => toast.error("התוסף לא זמין עדיין"));
               }}
             >
-              Download Extension
+              הורד תוסף
             </Button>
           </CardContent>
         </Card>
