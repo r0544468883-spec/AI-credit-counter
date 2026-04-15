@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { GoldenProgressBar } from "@/components/GoldenProgressBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UsageTrendChart } from "@/components/UsageTrendChart";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -78,6 +79,15 @@ const PlatformDetail = () => {
             <GoldenProgressBar value={totalUsed} max={maxQuota} size="lg" />
           </CardContent>
         </Card>
+
+        {/* Usage Trend */}
+        {logs && logs.length > 0 && (
+          <UsageTrendChart
+            logs={logs}
+            color={platform.color ?? undefined}
+            title={`מגמות שימוש — ${platform.name}`}
+          />
+        )}
 
         <Card className="glass-card">
           <CardHeader>

@@ -8,6 +8,7 @@ import { ShimmerSkeleton } from "@/components/ShimmerSkeleton";
 import { GoldenProgressBar } from "@/components/GoldenProgressBar";
 import { Activity, Cpu, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { UsageTrendChart } from "@/components/UsageTrendChart";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
@@ -130,6 +131,11 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Usage Trend Chart */}
+        {usageLogs && platforms && usageLogs.length > 0 && (
+          <UsageTrendChart logs={usageLogs} platforms={platforms} />
+        )}
 
         {/* Tip of the Day */}
         {tip && <DailyTipCard content={tip.content} category={tip.category ?? undefined} />}
