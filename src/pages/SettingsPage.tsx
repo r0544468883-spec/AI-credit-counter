@@ -2,14 +2,19 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Sun, Moon } from "lucide-react";
 
 const SettingsPage = () => {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const queryClient = useQueryClient();
   const [webhookUrl, setWebhookUrl] = useState("");
   const [threshold, setThreshold] = useState(80);
@@ -63,6 +68,24 @@ const SettingsPage = () => {
             <div>
               <label className="text-xs text-muted-foreground">שם תצוגה</label>
               <p className="text-sm text-foreground">{profile?.display_name ?? "—"}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="text-lg">מראה</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {theme === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
+                <div>
+                  <Label className="text-sm font-medium text-foreground">
+                    {theme === "dark" ? "מצב כהה" : "מצב בהיר"}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">החלף בין ערכת נושא כהה לבהירה</p>
+                </div>
+              </div>
+              <Switch checked={theme === "light"} onCheckedChange={toggleTheme} />
             </div>
           </CardContent>
         </Card>
