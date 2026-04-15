@@ -1,18 +1,108 @@
-// AI-Flow Monitor - Popup Script
-const DASHBOARD_URL = "https://id-preview--dec68301-0d60-4553-a63d-ef30714dcfd3.lovable.app";
+// AI-Flow Monitor - Popup Script with Auth & Sync
+const SUPABASE_URL = "https://sjollshuztvkkfvgiaus.supabase.co";
+const SUPABASE_ANON_KEY_URL = `${SUPABASE_URL}/functions/v1/extension-sync`;
 
 document.getElementById("open-dashboard").addEventListener("click", (e) => {
   e.preventDefault();
-  chrome.tabs.create({ url: DASHBOARD_URL + "/dashboard" });
+  chrome.tabs.create({ url: "https://id-preview--dec68301-0d60-4553-a63d-ef30714dcfd3.lovable.app/dashboard" });
 });
 
-// Load saved platform data from storage
-chrome.storage.local.get(["platforms", "tip"], (result) => {
+// Check if logged in
+chrome.storage.local.get(["auth_token", "anon_key", "user_email", "platforms", "tip"], (result) => {
   const app = document.getElementById("app");
-  const platforms = result.platforms || getDefaultPlatforms();
-  const tip = result.tip || "Use Claude for long-form analysis and GPT for quick creative tasks.";
 
-  let html = "";
+  if (!result.auth_token) {
+    showLogin(app);
+  } else {
+    showDashboard(app, result);
+    // Trigger background sync
+    chrome.runtime.sendMessage({ type: "SYNC" });
+  }
+});
+
+function showLogin(container) {
+  container.innerHTML = `
+    <div class="login-section">
+      <p style="font-size:13px; margin-bottom: 12px; color: #94a3b8;">Sign in to sync with your dashboard</p>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="login-btn">Sign In</button>
+      <div id="login-status"></div>
+    </div>
+  `;
+
+  document.getElementById("login-btn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const status = document.getElementById("login-status");
+
+    if (!email || !password) {
+      status.className = "status error";
+      status.textContent = "Please enter email and password";
+      return;
+    }
+
+    status.className = "status";
+    status.textContent = "Signing in...";
+
+    try {
+      // Get anon key from meta or use stored
+      const anonKeyRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": await getAnonKey(),
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await anonKeyRes.json();
+
+      if (data.error) {
+        status.className = "status error";
+        status.textContent = data.error_description || data.error;
+        return;
+      }
+
+      const token = data.access_token;
+      const anonKey = await getAnonKey();
+
+      chrome.storage.local.set({ auth_token: token, anon_key: anonKey, user_email: email });
+      chrome.runtime.sendMessage({ type: "LOGIN", token, anonKey });
+
+      status.className = "status";
+      status.textContent = "Signed in! Loading...";
+
+      setTimeout(() => location.reload(), 1000);
+    } catch (err) {
+      status.className = "status error";
+      status.textContent = "Connection failed";
+    }
+  });
+}
+
+async function getAnonKey() {
+  // The anon key is stored when first provided, or we use a known one
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["anon_key"], (result) => {
+      if (result.anon_key) {
+        resolve(result.anon_key);
+      } else {
+        // Fallback: stored during first setup via dashboard
+        resolve("");
+      }
+    });
+  });
+}
+
+function showDashboard(container, data) {
+  const platforms = data.platforms || getDefaultPlatforms();
+  const tip = data.tip || "Use Claude for long-form analysis and GPT for quick creative tasks.";
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <span style="font-size:11px;color:#64748b;">👤 ${data.user_email || 'Connected'}</span>
+    <button class="sync-btn" id="sync-btn">⟳ Sync</button>
+  </div>`;
 
   platforms.forEach((p) => {
     const pct = p.quota > 0 ? Math.min((p.used / p.quota) * 100, 100) : 0;
@@ -37,10 +127,21 @@ chrome.storage.local.get(["platforms", "tip"], (result) => {
       <div class="tip-label">💡 Tip of the Day</div>
       <div class="tip-text">${tip}</div>
     </div>
+    <button class="sync-btn" id="logout-btn" style="width:100%;margin-top:4px;color:#ef4444;border-color:#ef444440;">Logout</button>
   `;
 
-  app.innerHTML = html;
-});
+  container.innerHTML = html;
+
+  document.getElementById("sync-btn")?.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ type: "SYNC" });
+    setTimeout(() => location.reload(), 1500);
+  });
+
+  document.getElementById("logout-btn")?.addEventListener("click", () => {
+    chrome.storage.local.remove(["auth_token", "anon_key", "user_email", "platforms", "tip"]);
+    location.reload();
+  });
+}
 
 function getDefaultPlatforms() {
   return [
