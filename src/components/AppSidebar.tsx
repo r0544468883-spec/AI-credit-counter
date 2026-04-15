@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import tosafLogo from "@/assets/tosaf-logo.png";
 
 const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/platforms", icon: Cpu, label: "Platforms" },
-  { to: "/summary", icon: BarChart3, label: "Summary" },
-  { to: "/activity", icon: Activity, label: "Activity" },
-  { to: "/tips", icon: Lightbulb, label: "Tips" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "לוח בקרה" },
+  { to: "/platforms", icon: Cpu, label: "פלטפורמות" },
+  { to: "/summary", icon: BarChart3, label: "סיכום" },
+  { to: "/activity", icon: Activity, label: "פעילות" },
+  { to: "/tips", icon: Lightbulb, label: "טיפים" },
+  { to: "/settings", icon: Settings, label: "הגדרות" },
 ];
 
 export const AppSidebar = () => {
@@ -19,11 +19,11 @@ export const AppSidebar = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Logged out successfully");
+    toast.success("התנתקת בהצלחה");
   };
 
   return (
-    <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col fixed left-0 top-0 z-40">
+    <aside className="w-64 h-screen bg-sidebar border-s border-sidebar-border flex flex-col fixed inset-inline-start-0 top-0 z-40">
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
           <img src={tosafLogo} alt="AI-Flow Monitor" className="w-9 h-9 object-contain" />
@@ -61,7 +61,7 @@ export const AppSidebar = () => {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-destructive transition-all w-full"
         >
           <LogOut className="w-4 h-4" />
-          Logout
+          התנתקות
         </button>
       </div>
     </aside>

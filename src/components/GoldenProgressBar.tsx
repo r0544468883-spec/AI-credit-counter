@@ -35,7 +35,7 @@ export const GoldenProgressBar = ({
       {showLabel && (
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-muted-foreground">
-            {value} / {max} credits
+            {value} / {max} קרדיטים
           </span>
           <span
             className={cn(
