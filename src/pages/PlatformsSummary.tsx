@@ -139,6 +139,15 @@ const PlatformsSummary = () => {
           </Card>
         </div>
 
+        {/* Usage history chart - all platforms */}
+        {(usage ?? []).length > 0 && platforms && (
+          <UsageTrendChart
+            logs={usage!}
+            platforms={platforms.map((p) => ({ id: p.id, name: p.name, color: p.color }))}
+            title="היסטוריית שימוש — כל הפלטפורמות"
+          />
+        )}
+
         {/* Per-platform breakdown */}
         <div className="space-y-4">
           {(platforms ?? []).map((platform) => {
