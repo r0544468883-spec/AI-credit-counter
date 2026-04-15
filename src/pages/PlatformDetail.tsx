@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { PlanSelector } from "@/components/PlanSelector";
 import { GoldenProgressBar } from "@/components/GoldenProgressBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsageTrendChart } from "@/components/UsageTrendChart";
@@ -43,7 +44,7 @@ const PlatformDetail = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("user_platform_quotas")
-        .select("custom_quota_limit")
+        .select("custom_quota_limit, selected_plan_id")
         .eq("user_id", user!.id)
         .eq("platform_id", id!)
         .maybeSingle();
