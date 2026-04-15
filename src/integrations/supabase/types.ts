@@ -14,16 +14,231 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_platforms: {
+        Row: {
+          category: Database["public"]["Enums"]["platform_category"]
+          color: string | null
+          created_at: string
+          default_quota_limit: number
+          icon_url: string | null
+          id: string
+          name: string
+          reset_cycle: Database["public"]["Enums"]["reset_cycle"]
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["platform_category"]
+          color?: string | null
+          created_at?: string
+          default_quota_limit?: number
+          icon_url?: string | null
+          id?: string
+          name: string
+          reset_cycle?: Database["public"]["Enums"]["reset_cycle"]
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["platform_category"]
+          color?: string | null
+          created_at?: string
+          default_quota_limit?: number
+          icon_url?: string | null
+          id?: string
+          name?: string
+          reset_cycle?: Database["public"]["Enums"]["reset_cycle"]
+        }
+        Relationships: []
+      }
+      daily_tips: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          id: string
+          tip_date: string | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          tip_date?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          tip_date?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          settings: Json | null
+          subscription_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          settings?: Json | null
+          subscription_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          settings?: Json | null
+          subscription_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      usage_logs: {
+        Row: {
+          action_description: string | null
+          created_at: string
+          id: string
+          platform_id: string
+          units_used: number
+          user_id: string
+        }
+        Insert: {
+          action_description?: string | null
+          created_at?: string
+          id?: string
+          platform_id: string
+          units_used?: number
+          user_id: string
+        }
+        Update: {
+          action_description?: string | null
+          created_at?: string
+          id?: string
+          platform_id?: string
+          units_used?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_logs_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_platform_quotas: {
+        Row: {
+          created_at: string
+          custom_quota_limit: number
+          id: string
+          platform_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_quota_limit: number
+          id?: string
+          platform_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_quota_limit?: number
+          id?: string
+          platform_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_platform_quotas_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_configs: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          trigger_threshold: number
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          trigger_threshold?: number
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          trigger_threshold?: number
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      platform_category: "tier1" | "tier2"
+      reset_cycle: "daily" | "weekly" | "monthly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +365,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      platform_category: ["tier1", "tier2"],
+      reset_cycle: ["daily", "weekly", "monthly"],
+    },
   },
 } as const
