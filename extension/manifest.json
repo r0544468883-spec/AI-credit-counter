@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI-Flow Monitor",
-  "version": "1.0.0",
-  "description": "Track your AI credits across ChatGPT, Claude, Gemini and more",
+  "version": "1.1.0",
+  "description": "Track your AI credits across ChatGPT, Claude, Gemini and more — with real usage scraping",
   "permissions": ["activeTab", "storage", "tabs"],
   "action": {
     "default_popup": "popup.html",
@@ -13,17 +13,25 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://chat.openai.com/*", "https://chatgpt.com/*"],
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*",
+        "https://platform.openai.com/*"
+      ],
       "js": ["content-chatgpt.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://claude.ai/*"],
+      "matches": [
+        "https://claude.ai/*"
+      ],
       "js": ["content-claude.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://gemini.google.com/*"],
+      "matches": [
+        "https://gemini.google.com/*"
+      ],
       "js": ["content-gemini.js"],
       "run_at": "document_idle"
     }

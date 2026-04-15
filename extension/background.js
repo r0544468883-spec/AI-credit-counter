@@ -2,10 +2,9 @@
 const SUPABASE_URL = "https://sjollshuztvkkfvgiaus.supabase.co";
 const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/extension-sync`;
 
-// Listen for usage detection from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // --- Chat message counting (fallback) ---
   if (message.type === "USAGE_DETECTED") {
-    // Save locally first
     chrome.storage.local.get(["platforms"], (result) => {
       const platforms = result.platforms || [];
       const idx = platforms.findIndex((p) => p.name === message.platform);
@@ -21,20 +20,54 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
 
-    // Sync to backend
-    chrome.storage.local.get(["auth_token"], (result) => {
+    chrome.storage.local.get(["auth_token", "anon_key"], (result) => {
       if (result.auth_token) {
         fetch(`${FUNCTION_URL}?action=log`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${result.auth_token}`,
-            "apikey": result.anon_key || "",
+            Authorization: `Bearer ${result.auth_token}`,
+            apikey: result.anon_key || "",
           },
           body: JSON.stringify({
             platform_name: message.platform,
             units: message.units || 1,
+            model_name: message.model || null,
             description: message.description || "Auto-tracked by extension",
+          }),
+        }).catch(() => {});
+      }
+    });
+
+    sendResponse({ success: true });
+    return true;
+  }
+
+  // --- Quota scraped from settings pages (primary) ---
+  if (message.type === "QUOTA_SCRAPED") {
+    // Save locally
+    chrome.storage.local.get(["scraped_snapshots"], (result) => {
+      const snapshots = result.scraped_snapshots || {};
+      snapshots[message.platform] = {
+        data: message.snapshots,
+        scraped_at: new Date().toISOString(),
+      };
+      chrome.storage.local.set({ scraped_snapshots: snapshots });
+    });
+
+    // Sync to backend
+    chrome.storage.local.get(["auth_token", "anon_key"], (result) => {
+      if (result.auth_token) {
+        fetch(`${FUNCTION_URL}?action=update-quota`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${result.auth_token}`,
+            apikey: result.anon_key || "",
+          },
+          body: JSON.stringify({
+            platform_name: message.platform,
+            snapshots: message.snapshots,
           }),
         }).catch(() => {});
       }
@@ -68,8 +101,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function syncFromBackend(token, anonKey) {
   fetch(`${FUNCTION_URL}?action=sync`, {
     headers: {
-      "Authorization": `Bearer ${token}`,
-      "apikey": anonKey || "",
+      Authorization: `Bearer ${token}`,
+      apikey: anonKey || "",
     },
   })
     .then((r) => r.json())
@@ -78,6 +111,7 @@ function syncFromBackend(token, anonKey) {
         chrome.storage.local.set({
           platforms: data.platforms,
           tip: data.tip,
+          scraped_snapshots: data.snapshots || {},
         });
       }
     })
@@ -92,3 +126,15 @@ setInterval(() => {
     }
   });
 }, 5 * 60 * 1000);
+
+// Clean old hashes every hour
+setInterval(() => {
+  ["chatgpt_hashes", "claude_hashes", "gemini_hashes"].forEach((key) => {
+    chrome.storage.local.get([key], (result) => {
+      const arr = result[key] || [];
+      if (arr.length > 500) {
+        chrome.storage.local.set({ [key]: arr.slice(-300) });
+      }
+    });
+  });
+}, 60 * 60 * 1000);
