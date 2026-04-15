@@ -29,8 +29,44 @@
     return null;
   }
 
+  // --- DALL-E image detection ---
+  let seenImages = new Set();
+
+  function detectDallEImages() {
+    // DALL-E images in ChatGPT appear as img elements within assistant messages
+    const imgs = document.querySelectorAll(
+      '[data-message-author-role="assistant"] img[src*="oaidalleapi"], ' +
+      '[data-message-author-role="assistant"] img[src*="dalle"], ' +
+      '[data-message-author-role="assistant"] img[alt*="DALL"], ' +
+      '[data-message-author-role="assistant"] img[src*="openai"]'
+    );
+
+    let newImages = 0;
+    imgs.forEach((img) => {
+      const src = img.src || img.getAttribute("data-src") || "";
+      const key = src.slice(0, 200);
+      if (key && !seenImages.has(key)) {
+        seenImages.add(key);
+        newImages++;
+      }
+    });
+
+    if (newImages > 0) {
+      chrome.runtime.sendMessage({
+        type: "USAGE_DETECTED",
+        platform: "DALL-E",
+        units: newImages,
+        model: "DALL-E 3",
+        description: `${newImages} image(s) generated`,
+      });
+    }
+  }
+
   // --- Chat message tracking (fallback) ---
   const chatObserver = new MutationObserver(() => {
+    // Track DALL-E images
+    detectDallEImages();
+
     const messages = document.querySelectorAll('[data-message-author-role="assistant"]');
     if (messages.length > lastMessageCount) {
       let newCount = 0;
@@ -40,7 +76,6 @@
           seenHashes.add(hash);
           newCount++;
         } else if (!hash) {
-          // Message still streaming — count it (early counting)
           newCount++;
         }
       }
