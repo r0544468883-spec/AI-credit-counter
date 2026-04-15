@@ -82,17 +82,7 @@ function showLogin(container) {
 }
 
 async function getAnonKey() {
-  // The anon key is stored when first provided, or we use a known one
-  return new Promise((resolve) => {
-    chrome.storage.local.get(["anon_key"], (result) => {
-      if (result.anon_key) {
-        resolve(result.anon_key);
-      } else {
-        // Fallback: stored during first setup via dashboard
-        resolve("");
-      }
-    });
-  });
+  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqb2xsc2h1enR2a2tmdmdpYXVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMzUzOTYsImV4cCI6MjA5MTgxMTM5Nn0.iCudC6Lt55TZrDcgRW9PLjWsQdy-rUCJYuUCFfp4E6Y";
 }
 
 function showDashboard(container, data) {
