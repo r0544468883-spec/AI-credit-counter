@@ -109,6 +109,53 @@ export type Database = {
           },
         ]
       }
+      platform_usage_snapshots: {
+        Row: {
+          actual_limit: number | null
+          actual_remaining: number | null
+          created_at: string
+          id: string
+          model_name: string | null
+          platform_id: string
+          reset_at: string | null
+          scraped_at: string
+          source: Database["public"]["Enums"]["snapshot_source"]
+          user_id: string
+        }
+        Insert: {
+          actual_limit?: number | null
+          actual_remaining?: number | null
+          created_at?: string
+          id?: string
+          model_name?: string | null
+          platform_id: string
+          reset_at?: string | null
+          scraped_at?: string
+          source?: Database["public"]["Enums"]["snapshot_source"]
+          user_id: string
+        }
+        Update: {
+          actual_limit?: number | null
+          actual_remaining?: number | null
+          created_at?: string
+          id?: string
+          model_name?: string | null
+          platform_id?: string
+          reset_at?: string | null
+          scraped_at?: string
+          source?: Database["public"]["Enums"]["snapshot_source"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_usage_snapshots_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "ai_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -147,6 +194,7 @@ export type Database = {
           action_description: string | null
           created_at: string
           id: string
+          model_name: string | null
           platform_id: string
           units_used: number
           user_id: string
@@ -155,6 +203,7 @@ export type Database = {
           action_description?: string | null
           created_at?: string
           id?: string
+          model_name?: string | null
           platform_id: string
           units_used?: number
           user_id: string
@@ -163,6 +212,7 @@ export type Database = {
           action_description?: string | null
           created_at?: string
           id?: string
+          model_name?: string | null
           platform_id?: string
           units_used?: number
           user_id?: string
@@ -287,6 +337,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       platform_category: "tier1" | "tier2"
       reset_cycle: "daily" | "weekly" | "monthly"
+      snapshot_source: "scraped" | "manual" | "estimated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -417,6 +468,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       platform_category: ["tier1", "tier2"],
       reset_cycle: ["daily", "weekly", "monthly"],
+      snapshot_source: ["scraped", "manual", "estimated"],
     },
   },
 } as const
