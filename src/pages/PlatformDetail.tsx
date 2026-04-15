@@ -81,6 +81,12 @@ const PlatformDetail = () => {
           </CardContent>
         </Card>
 
+        {/* Plan Selection */}
+        <PlanSelector
+          platformId={id!}
+          selectedPlanId={quota?.selected_plan_id}
+        />
+
         {/* Usage Trend */}
         {logs && logs.length > 0 && (
           <UsageTrendChart
