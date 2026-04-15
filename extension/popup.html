@@ -27,6 +27,14 @@
     .footer { padding: 12px; border-top: 1px solid #1e293b; text-align: center; }
     .footer a { color: #facc15; text-decoration: none; font-size: 12px; font-weight: 600; }
     .footer a:hover { text-decoration: underline; }
+    .login-section { padding: 20px; text-align: center; }
+    .login-section input { width: 100%; padding: 8px 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #1e293b; background: #131b2e; color: #e2e8f0; font-size: 13px; }
+    .login-section button { width: 100%; padding: 10px; margin-top: 8px; border: none; border-radius: 8px; background: #facc15; color: #0b1120; font-weight: 700; cursor: pointer; font-size: 13px; }
+    .login-section button:hover { background: #eab308; }
+    .status { font-size: 11px; color: #22c55e; margin-top: 8px; }
+    .status.error { color: #ef4444; }
+    .sync-btn { background: none; border: 1px solid #1e293b; color: #64748b; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-top: 8px; }
+    .sync-btn:hover { border-color: #facc15; color: #facc15; }
     #loading { text-align: center; padding: 40px; color: #64748b; }
   </style>
 </head>
@@ -38,7 +46,7 @@
     </div>
   </div>
   <div class="content" id="app">
-    <div id="loading">Loading platforms...</div>
+    <div id="loading">Loading...</div>
   </div>
   <div class="footer">
     <a href="#" id="open-dashboard">Open Dashboard →</a>
