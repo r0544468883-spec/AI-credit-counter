@@ -1,21 +1,17 @@
 // AI-Flow Monitor - Popup Script with Auth & Sync
 const SUPABASE_URL = "https://sjollshuztvkkfvgiaus.supabase.co";
-const SUPABASE_ANON_KEY_URL = `${SUPABASE_URL}/functions/v1/extension-sync`;
 
 document.getElementById("open-dashboard").addEventListener("click", (e) => {
   e.preventDefault();
   chrome.tabs.create({ url: "https://id-preview--dec68301-0d60-4553-a63d-ef30714dcfd3.lovable.app/dashboard" });
 });
 
-// Check if logged in
-chrome.storage.local.get(["auth_token", "anon_key", "user_email", "platforms", "tip"], (result) => {
+chrome.storage.local.get(["auth_token", "anon_key", "user_email", "platforms", "tip", "scraped_snapshots"], (result) => {
   const app = document.getElementById("app");
-
   if (!result.auth_token) {
     showLogin(app);
   } else {
     showDashboard(app, result);
-    // Trigger background sync
     chrome.runtime.sendMessage({ type: "SYNC" });
   }
 });
@@ -46,18 +42,14 @@ function showLogin(container) {
     status.textContent = "Signing in...";
 
     try {
-      // Get anon key from meta or use stored
+      const anonKey = await getAnonKey();
       const anonKeyRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": await getAnonKey(),
-        },
+        headers: { "Content-Type": "application/json", apikey: anonKey },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await anonKeyRes.json();
-
       if (data.error) {
         status.className = "status error";
         status.textContent = data.error_description || data.error;
@@ -65,14 +57,10 @@ function showLogin(container) {
       }
 
       const token = data.access_token;
-      const anonKey = await getAnonKey();
-
       chrome.storage.local.set({ auth_token: token, anon_key: anonKey, user_email: email });
       chrome.runtime.sendMessage({ type: "LOGIN", token, anonKey });
-
       status.className = "status";
       status.textContent = "Signed in! Loading...";
-
       setTimeout(() => location.reload(), 1000);
     } catch (err) {
       status.className = "status error";
@@ -87,25 +75,44 @@ async function getAnonKey() {
 
 function showDashboard(container, data) {
   const platforms = data.platforms || getDefaultPlatforms();
+  const snapshots = data.scraped_snapshots || {};
   const tip = data.tip || "Use Claude for long-form analysis and GPT for quick creative tasks.";
 
   let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <span style="font-size:11px;color:#64748b;">👤 ${data.user_email || 'Connected'}</span>
+    <span style="font-size:11px;color:#64748b;">👤 ${data.user_email || "Connected"}</span>
     <button class="sync-btn" id="sync-btn">⟳ Sync</button>
   </div>`;
 
   platforms.forEach((p) => {
-    const pct = p.quota > 0 ? Math.min((p.used / p.quota) * 100, 100) : 0;
+    const snap = snapshots[p.name] || p.snapshot;
+    const isFresh = snap?.scraped_at && (Date.now() - new Date(snap.scraped_at).getTime()) < 30 * 60 * 1000;
+
+    let used, quota, sourceLabel;
+    if (isFresh && snap.data?.[0]?.actual_remaining != null && snap.data?.[0]?.actual_limit) {
+      used = snap.data[0].actual_limit - snap.data[0].actual_remaining;
+      quota = snap.data[0].actual_limit;
+      sourceLabel = "✓ מאומת";
+    } else if (isFresh && snap.actual_remaining != null && snap.actual_limit) {
+      used = snap.actual_limit - snap.actual_remaining;
+      quota = snap.actual_limit;
+      sourceLabel = "✓ מאומת";
+    } else {
+      used = p.used || 0;
+      quota = p.quota || 100;
+      sourceLabel = "~ הערכה";
+    }
+
+    const pct = quota > 0 ? Math.min((used / quota) * 100, 100) : 0;
     const colorClass = pct >= 90 ? "red" : pct >= 70 ? "yellow" : "green";
-    const remaining = Math.max(p.quota - p.used, 0);
+    const remaining = Math.max(quota - used, 0);
 
     html += `
       <div class="platform">
         <div class="platform-icon" style="background:${p.color}20;color:${p.color}">${p.name[0]}</div>
         <div class="platform-info">
-          <div class="platform-name">${p.name}</div>
+          <div class="platform-name">${p.name} <span style="font-size:9px;color:${isFresh ? '#22c55e' : '#64748b'};margin-right:4px;">${sourceLabel}</span></div>
           <div class="progress-bar"><div class="progress-fill ${colorClass}" style="width:${pct}%"></div></div>
-          <div class="platform-meta">${p.used}/${p.quota} credits used</div>
+          <div class="platform-meta">${used}/${quota} credits used</div>
         </div>
         <div class="platform-remaining">${remaining}<small>left</small></div>
       </div>
@@ -128,7 +135,7 @@ function showDashboard(container, data) {
   });
 
   document.getElementById("logout-btn")?.addEventListener("click", () => {
-    chrome.storage.local.remove(["auth_token", "anon_key", "user_email", "platforms", "tip"]);
+    chrome.storage.local.remove(["auth_token", "anon_key", "user_email", "platforms", "tip", "scraped_snapshots"]);
     location.reload();
   });
 }
