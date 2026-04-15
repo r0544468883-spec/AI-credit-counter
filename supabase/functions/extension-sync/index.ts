@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
 
-    // GET: Fetch platforms + usage for extension popup
+    // GET: Fetch platforms + usage + snapshots for extension popup
     if (req.method === 'GET' && action === 'sync') {
       const { data: platforms } = await supabase.from('ai_platforms').select('*')
       const { data: usage } = await supabase
@@ -54,6 +54,13 @@ Deno.serve(async (req) => {
         .limit(1)
         .single()
 
+      // Get latest snapshot per platform
+      const { data: snapshots } = await supabase
+        .from('platform_usage_snapshots')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('scraped_at', { ascending: false })
+
       // Aggregate usage per platform
       const usageMap: Record<string, number> = {}
       for (const log of usage || []) {
@@ -64,17 +71,33 @@ Deno.serve(async (req) => {
         quotaMap[q.platform_id] = q.custom_quota_limit
       }
 
-      const syncedPlatforms = (platforms || []).map((p) => ({
+      // Build snapshot map (latest per platform)
+      const snapshotMap: Record<string, any> = {}
+      for (const s of snapshots || []) {
+        if (!snapshotMap[s.platform_id]) {
+          snapshotMap[s.platform_id] = {
+            actual_remaining: s.actual_remaining,
+            actual_limit: s.actual_limit,
+            model_name: s.model_name,
+            source: s.source,
+            scraped_at: s.scraped_at,
+          }
+        }
+      }
+
+      const syncedPlatforms = (platforms || []).map((p: any) => ({
         id: p.id,
         name: p.name,
         color: p.color || '#facc15',
         used: usageMap[p.id] || 0,
         quota: quotaMap[p.id] || p.default_quota_limit,
+        snapshot: snapshotMap[p.id] || null,
       }))
 
       return new Response(JSON.stringify({
         platforms: syncedPlatforms,
         tip: tip?.content || '',
+        snapshots: snapshotMap,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -83,7 +106,7 @@ Deno.serve(async (req) => {
     // POST: Log usage from extension
     if (req.method === 'POST' && action === 'log') {
       const body = await req.json()
-      const { platform_name, units, description } = body
+      const { platform_name, units, description, model_name } = body
 
       if (!platform_name || !units) {
         return new Response(JSON.stringify({ error: 'Missing platform_name or units' }), {
@@ -92,7 +115,6 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Find platform by name
       const { data: platform } = await supabase
         .from('ai_platforms')
         .select('id')
@@ -111,7 +133,59 @@ Deno.serve(async (req) => {
         platform_id: platform.id,
         units_used: units,
         action_description: description || 'Auto-tracked by extension',
+        model_name: model_name || null,
       })
+
+      if (insertError) {
+        return new Response(JSON.stringify({ error: insertError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // POST: Update quota from scraped data
+    if (req.method === 'POST' && action === 'update-quota') {
+      const body = await req.json()
+      const { platform_name, snapshots: snapshotData } = body
+
+      if (!platform_name || !snapshotData) {
+        return new Response(JSON.stringify({ error: 'Missing platform_name or snapshots' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: platform } = await supabase
+        .from('ai_platforms')
+        .select('id')
+        .ilike('name', platform_name)
+        .single()
+
+      if (!platform) {
+        return new Response(JSON.stringify({ error: 'Platform not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Insert each snapshot
+      const rows = (snapshotData as any[]).map((s: any) => ({
+        user_id: user.id,
+        platform_id: platform.id,
+        model_name: s.model || null,
+        actual_remaining: s.actual_remaining ?? null,
+        actual_limit: s.actual_limit ?? null,
+        source: 'scraped' as const,
+      }))
+
+      const { error: insertError } = await supabase
+        .from('platform_usage_snapshots')
+        .insert(rows)
 
       if (insertError) {
         return new Response(JSON.stringify({ error: insertError.message }), {
@@ -130,7 +204,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
