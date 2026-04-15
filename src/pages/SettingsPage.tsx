@@ -1,0 +1,130 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+const SettingsPage = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [threshold, setThreshold] = useState(80);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: webhooks } = useQuery({
+    queryKey: ["webhooks", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("webhook_configs").select("*").eq("user_id", user!.id);
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const addWebhook = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("webhook_configs").insert({ user_id: user!.id, url: webhookUrl, trigger_threshold: threshold });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Webhook added");
+      setWebhookUrl("");
+      queryClient.invalidateQueries({ queryKey: ["webhooks"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6 max-w-2xl">
+        <div>
+          <h1 className="text-3xl font-bold golden-text">Settings</h1>
+          <p className="text-muted-foreground mt-1">Configure your AI-Flow Monitor</p>
+        </div>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="text-lg">Profile</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground">Email</label>
+              <p className="text-sm text-foreground">{profile?.email ?? user?.email}</p>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Display Name</label>
+              <p className="text-sm text-foreground">{profile?.display_name ?? "—"}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card">
+          <CardHeader><CardTitle className="text-lg">Webhook Notifications</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">Get notified when your usage hits a threshold (Make.com / n8n compatible)</p>
+            <div className="flex gap-3">
+              <Input
+                placeholder="https://hook.us1.make.com/..."
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                className="bg-muted/50 border-border/50"
+              />
+              <Input
+                type="number"
+                value={threshold}
+                onChange={(e) => setThreshold(Number(e.target.value))}
+                className="w-20 bg-muted/50 border-border/50"
+                min={1}
+                max={100}
+              />
+              <Button onClick={() => addWebhook.mutate()} disabled={!webhookUrl}>Add</Button>
+            </div>
+            {webhooks && webhooks.length > 0 && (
+              <div className="space-y-2 mt-4">
+                {webhooks.map((w) => (
+                  <div key={w.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <span className="text-sm text-foreground truncate max-w-xs">{w.url}</span>
+                    <span className="text-xs text-primary font-semibold">{w.trigger_threshold}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card border-primary/20">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-semibold golden-text mb-1">Chrome Extension</h3>
+            <p className="text-xs text-muted-foreground mb-3">Download the extension to track usage directly from AI platforms</p>
+            <Button
+              variant="outline"
+              className="border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => {
+                fetch("/ai-flow-extension.zip").then(r => r.blob()).then(b => {
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(b);
+                  a.download = "ai-flow-extension.zip";
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                }).catch(() => toast.error("Extension not yet available"));
+              }}
+            >
+              Download Extension
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default SettingsPage;
