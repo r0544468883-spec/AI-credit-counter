@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Cpu, Lightbulb, Settings, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, Cpu, Lightbulb, Settings, LogOut, Activity, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import tosafLogo from "@/assets/tosaf-logo.png";
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/platforms", icon: Cpu, label: "Platforms" },
+  { to: "/summary", icon: BarChart3, label: "Summary" },
   { to: "/activity", icon: Activity, label: "Activity" },
   { to: "/tips", icon: Lightbulb, label: "Tips" },
   { to: "/settings", icon: Settings, label: "Settings" },

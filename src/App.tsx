@@ -11,6 +11,7 @@ import PlatformDetail from "./pages/PlatformDetail";
 import Tips from "./pages/Tips";
 import ActivityFeed from "./pages/ActivityFeed";
 import SettingsPage from "./pages/SettingsPage";
+import PlatformsSummary from "./pages/PlatformsSummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/platforms" element={<ProtectedRoute><Platforms /></ProtectedRoute>} />
             <Route path="/platforms/:id" element={<ProtectedRoute><PlatformDetail /></ProtectedRoute>} />
+            <Route path="/summary" element={<ProtectedRoute><PlatformsSummary /></ProtectedRoute>} />
             <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
             <Route path="/activity" element={<ProtectedRoute><ActivityFeed /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
